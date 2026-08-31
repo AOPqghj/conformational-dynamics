@@ -1,0 +1,13 @@
+family,comparison,metric,raw_mean,residual_mean,mean_difference,paired_p,paired_method,n_splits,paired_fdr
+linear,residual_plddt_minus_raw_bioemu_no_msa,accuracy,0.6771130104463438,0.6647673314339981,-0.012345679012345623,0.5,exact_paired_sign_flip,2,0.5454545454545454
+linear,residual_plddt_minus_raw_bioemu_no_msa,auroc,0.7418650793650794,0.7268398268398268,-0.015025252525252553,0.5,exact_paired_sign_flip,2,0.5454545454545454
+linear,residual_plddt_minus_raw_bioemu_no_msa,auprc,0.777315283176468,0.7669377056609163,-0.010377577515551628,0.5,exact_paired_sign_flip,2,0.5454545454545454
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,accuracy,0.6771130104463438,0.6120607787274455,-0.06505223171889835,0.5,exact_paired_sign_flip,2,0.5454545454545454
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,auroc,0.7418650793650794,0.650791847041847,-0.09107323232323233,0.5,exact_paired_sign_flip,2,0.5454545454545454
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,auprc,0.777315283176468,0.6700644414099268,-0.1072508417665412,0.5,exact_paired_sign_flip,2,0.5454545454545454
+tree,residual_plddt_minus_raw_bioemu_no_msa,accuracy,0.6595441595441596,0.6766381766381766,0.01709401709401709,1.0,exact_paired_sign_flip,2,1.0
+tree,residual_plddt_minus_raw_bioemu_no_msa,auroc,0.7157106782106781,0.7427579365079364,0.027047258297258348,0.5,exact_paired_sign_flip,2,0.5454545454545454
+tree,residual_plddt_minus_raw_bioemu_no_msa,auprc,0.7455048380637584,0.7659517723091543,0.020446934245395898,0.5,exact_paired_sign_flip,2,0.5454545454545454
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,accuracy,0.6595441595441596,0.6196581196581197,-0.03988603988603989,0.5,exact_paired_sign_flip,2,0.5454545454545454
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,auroc,0.7157106782106781,0.6688564213564214,-0.04685425685425676,0.5,exact_paired_sign_flip,2,0.5454545454545454
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,auprc,0.7455048380637584,0.6632069152012715,-0.08229792286248694,0.5,exact_paired_sign_flip,2,0.5454545454545454

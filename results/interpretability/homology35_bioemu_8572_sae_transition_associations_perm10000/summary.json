@@ -1,0 +1,31 @@
+{
+  "aligned_residues": 161634,
+  "both_fdr_significant": 15,
+  "completed_structure_prs_proteins": 597,
+  "config_hash": "4c075170433e00c3fe39a8f1850cc9e1f565daa57b56f1fd6adceb36d9d791a4",
+  "configuration": {
+    "allow_incomplete": true,
+    "checkpoint_every": 25,
+    "device": "cpu",
+    "fdr_alpha": 0.05,
+    "inference_batch_size": 512,
+    "minimum_active_residues_per_protein": 5,
+    "n_permutations": 10000,
+    "permutation_batch_size": 16,
+    "permutation_row_batch_size": 4096,
+    "seed": 42,
+    "statistic_version": "within_protein_percentile_rank_v2"
+  },
+  "device": "cpu",
+  "displacement_fdr_significant": 1504,
+  "eligible_dynamic_test_proteins": 640,
+  "features": 4096,
+  "prs_fdr_significant": 17,
+  "sae_manifest_sha256": "e48ff10f8ea59121e1afdd2ef5b097f661422faac650805d8d06243d448a4e4f",
+  "sae_name": "bioemu_matrix_topk64_seed42",
+  "top_displacement_feature": 1985,
+  "top_prs_feature": 1959,
+  "transition_score_proteins_outside_catalog": 3,
+  "transition_score_scope": "QC-complete homology-grouped Seed-42 dynamic test proteins",
+  "unavailable_transition_score_proteins": 43
+}

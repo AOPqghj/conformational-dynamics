@@ -1,0 +1,47 @@
+version: 1
+seed: 42
+resume: true
+
+cohort:
+  expected_catalog_rows: 4395
+
+representation:
+  name: esmfold
+  width: 1024
+  expected_rows: 4395
+  allowed_missing: 0
+  preserve_catalog_split: true
+
+paths:
+  catalog: data/lifecycle/final/initial_8598_dataset/homology35_seed42/pathpre_only_controls/pathpre_matched_4395_catalog.parquet
+  embedding_manifest: data/lifecycle/final/initial_8598_dataset/homology35_seed42/pathpre_only_controls/esmfold_embedding_manifest.csv
+  transition_candidates: data/lifecycle/final/initial_8598_dataset/analysis/transition_important_proteins.csv
+  annotations: data/lifecycle/final/initial_8598_dataset/analysis/dynamic_motion_driver_annotations.csv
+  ml_root: ml/results/pathpre_only_source_control/esmfold
+  interpretability_root: interpretability/results/pathpre_only_source_control/esmfold
+
+training:
+  pooled:
+    enabled: true
+    output: ml/results/pathpre_only_source_control/esmfold/pooled_frozen_models
+    cpu_threads: 2
+  cnn:
+    enabled: true
+    output: ml/results/pathpre_only_source_control/esmfold/full_matrix_cnn
+    device: cpu
+    batch_size: 8
+    max_epochs: 30
+    patience: 5
+    models: [residue_cnn, residue_cnn_expanded]
+  sae:
+    enabled: false
+    output: ml/results/pathpre_only_source_control/esmfold/disabled_sae
+    frozen_output: ml/results/pathpre_only_source_control/esmfold/disabled_sae_frozen
+
+interpretability:
+  transition_pairs: {enabled: false, output: interpretability/results/pathpre_only_source_control/esmfold/disabled_transition_pairs}
+  transition_embeddings: {enabled: false, output: interpretability/results/pathpre_only_source_control/esmfold/disabled_transition_embeddings}
+  sae_associations: {enabled: false, output: interpretability/results/pathpre_only_source_control/esmfold/disabled_sae_associations}
+  sae_router_tests: {enabled: false, output: interpretability/results/pathpre_only_source_control/esmfold/disabled_sae_router}
+  sae_structural_roles: {enabled: false, output: interpretability/results/pathpre_only_source_control/esmfold/disabled_sae_structural}
+  cnn_attribution: {enabled: false, reason: not_part_of_source_control}

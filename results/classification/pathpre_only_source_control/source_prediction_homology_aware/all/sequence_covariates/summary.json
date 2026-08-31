@@ -1,0 +1,72 @@
+{
+  "class_counts": {
+    "atlas": 240,
+    "dynamicmpnn": 2803,
+    "pathpre": 4411,
+    "promise": 155,
+    "rcsb": 989
+  },
+  "classes": [
+    "atlas",
+    "dynamicmpnn",
+    "pathpre",
+    "promise",
+    "rcsb"
+  ],
+  "cohort": "all",
+  "feature_view": "sequence_covariates",
+  "folds": 5,
+  "majority_baseline": {
+    "accuracy": 0.5130262851826006,
+    "balanced_accuracy": 0.2,
+    "macro_f1": 0.13562917979860095,
+    "source": "pathpre"
+  },
+  "metrics": {
+    "accuracy": 0.3481042102814608,
+    "balanced_accuracy": 0.36187437767234865,
+    "log_loss": 1.5057843540198703,
+    "macro_f1": 0.26076511118172807,
+    "macro_ovr_auroc": 0.6643726542052807
+  },
+  "model": {
+    "C": 0.1,
+    "preprocessing": "train_fold_standard_scaler",
+    "type": "class_balanced_multinomial_logistic_regression"
+  },
+  "per_source_recall": {
+    "atlas": 0.325,
+    "dynamicmpnn": 0.4006421691045309,
+    "pathpre": 0.3409657673996826,
+    "promise": 0.535483870967742,
+    "rcsb": 0.20728008088978767
+  },
+  "permutation_tests": {
+    "balanced_accuracy": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.19974863743515409,
+      "null_q025": 0.18383763375708856,
+      "null_q975": 0.2184523138639048,
+      "observed": 0.36187437767234865,
+      "permutation_p_greater": 0.000999000999000999
+    },
+    "macro_f1": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.16088128655152947,
+      "null_q025": 0.1546585728575983,
+      "null_q975": 0.16761995262232288,
+      "observed": 0.26076511118172807,
+      "permutation_p_greater": 0.000999000999000999
+    },
+    "macro_ovr_auroc": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.5000040131521666,
+      "null_q025": 0.48639654672149574,
+      "null_q975": 0.5132954328364149,
+      "observed": 0.6643726542052807,
+      "permutation_p_greater": 0.000999000999000999
+    }
+  },
+  "rows": 8598,
+  "status": "complete"
+}

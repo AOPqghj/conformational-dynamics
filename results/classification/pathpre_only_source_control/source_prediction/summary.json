@@ -1,0 +1,77 @@
+{
+  "catalog": "data/lifecycle/final/initial_8598_dataset/homology35_seed42/catalog.parquet",
+  "embedding_manifest": "data/lifecycle/final/initial_8598_dataset/embedding_manifest.csv",
+  "experiments": [
+    {
+      "accuracy": 0.3481042102814608,
+      "balanced_accuracy": 0.36187437767234865,
+      "cohort": "all",
+      "feature_view": "sequence_covariates",
+      "log_loss": 1.5057843540198703,
+      "macro_f1": 0.26076511118172807,
+      "macro_ovr_auroc": 0.6643726542052807,
+      "majority_accuracy": 0.5130262851826006,
+      "rows": 8598
+    },
+    {
+      "accuracy": 0.5837404047452897,
+      "balanced_accuracy": 0.3913663267140924,
+      "cohort": "all",
+      "feature_view": "pooled_esmfold",
+      "log_loss": 1.5693655775896926,
+      "macro_f1": 0.38651981851580774,
+      "macro_ovr_auroc": 0.783673674859054,
+      "majority_accuracy": 0.5130262851826006,
+      "rows": 8598
+    },
+    {
+      "accuracy": 0.5432501748659361,
+      "balanced_accuracy": 0.5163611729362539,
+      "cohort": "dynamic_only",
+      "feature_view": "sequence_covariates",
+      "log_loss": 0.9520538330951286,
+      "macro_f1": 0.4295691245077651,
+      "macro_ovr_auroc": 0.7074531005695547,
+      "majority_accuracy": 0.653532291909536,
+      "rows": 4289
+    },
+    {
+      "accuracy": 0.7614828631382606,
+      "balanced_accuracy": 0.5509291554259751,
+      "cohort": "dynamic_only",
+      "feature_view": "pooled_esmfold",
+      "log_loss": 0.9021109423363117,
+      "macro_f1": 0.5528422757138955,
+      "macro_ovr_auroc": 0.8311804949911502,
+      "majority_accuracy": 0.653532291909536,
+      "rows": 4289
+    },
+    {
+      "accuracy": 0.4998839637967046,
+      "balanced_accuracy": 0.46203253829644125,
+      "cohort": "static_only",
+      "feature_view": "sequence_covariates",
+      "log_loss": 1.0228187983464267,
+      "macro_f1": 0.3849345807354376,
+      "macro_ovr_auroc": 0.6367748578377265,
+      "majority_accuracy": 0.7147830122998375,
+      "rows": 4309
+    },
+    {
+      "accuracy": 0.6955210025527965,
+      "balanced_accuracy": 0.5286816416366467,
+      "cohort": "static_only",
+      "feature_view": "pooled_esmfold",
+      "log_loss": 1.138641256746591,
+      "macro_f1": 0.5246934682539227,
+      "macro_ovr_auroc": 0.7716378624025265,
+      "majority_accuracy": 0.7147830122998375,
+      "rows": 4309
+    }
+  ],
+  "folds": 5,
+  "interpretation": "Source recoverability indicates provenance-specific signal. It does not establish that a dynamics classifier relies on that signal; the PathPre-only benchmark is the direct source-controlled dynamics evaluation.",
+  "permutations": 1000,
+  "status": "complete",
+  "updated_at_utc": "2026-08-25T11:57:40.259562+00:00"
+}

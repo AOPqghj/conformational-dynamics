@@ -1,0 +1,66 @@
+{
+  "class_counts": {
+    "atlas": 240,
+    "pathpre": 3080,
+    "rcsb": 989
+  },
+  "classes": [
+    "atlas",
+    "pathpre",
+    "rcsb"
+  ],
+  "cohort": "static_only",
+  "feature_view": "pooled_esmfold",
+  "folds": 5,
+  "majority_baseline": {
+    "accuracy": 0.7147830122998375,
+    "balanced_accuracy": 0.3333333333333333,
+    "macro_f1": 0.27789055803672125,
+    "source": "pathpre"
+  },
+  "metrics": {
+    "accuracy": 0.6955210025527965,
+    "balanced_accuracy": 0.5286816416366467,
+    "log_loss": 1.138641256746591,
+    "macro_f1": 0.5246934682539227,
+    "macro_ovr_auroc": 0.7716378624025265
+  },
+  "model": {
+    "C": 0.1,
+    "preprocessing": "train_fold_standard_scaler",
+    "type": "class_balanced_multinomial_logistic_regression"
+  },
+  "per_source_recall": {
+    "atlas": 0.2791666666666667,
+    "pathpre": 0.7831168831168831,
+    "rcsb": 0.5237613751263903
+  },
+  "permutation_tests": {
+    "balanced_accuracy": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.33311825385882515,
+      "null_q025": 0.3190620381191665,
+      "null_q975": 0.34795985867996737,
+      "observed": 0.5286816416366467,
+      "permutation_p_greater": 0.000999000999000999
+    },
+    "macro_f1": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.33293653618891245,
+      "null_q025": 0.319155754441535,
+      "null_q975": 0.34758533119497,
+      "observed": 0.5246934682539227,
+      "permutation_p_greater": 0.000999000999000999
+    },
+    "macro_ovr_auroc": {
+      "method": "fixed_oof_prediction_label_permutation",
+      "null_mean": 0.49998853970038326,
+      "null_q025": 0.48283304700680685,
+      "null_q975": 0.5170041682374152,
+      "observed": 0.7716378624025265,
+      "permutation_p_greater": 0.000999000999000999
+    }
+  },
+  "rows": 4309,
+  "status": "complete"
+}

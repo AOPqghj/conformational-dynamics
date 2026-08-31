@@ -1,0 +1,26 @@
+{
+  "catalog_sha256": "83afcae945637eff6b301128ad4fefa8c35b0bae0e4fb589625e468282cf9f41",
+  "checkpoint": "ml/results/homology35_bioemu_sae_seed42_topk4096/latest.pt",
+  "device": "cpu",
+  "feature_summary": "feature_activation_summary.parquet",
+  "partitions": {
+    "test": {
+      "explained_variance": 0.9957388989778346,
+      "feature_density_mean": 0.015625,
+      "mean_active_features": 64.0,
+      "proteins": 1286,
+      "reconstruction_mse": 41.10863505159152,
+      "sampled_residues": 81861
+    },
+    "val": {
+      "explained_variance": 0.9956202507990699,
+      "feature_density_mean": 0.015625,
+      "mean_active_features": 64.0,
+      "proteins": 1287,
+      "reconstruction_mse": 40.891750823623354,
+      "sampled_residues": 82132
+    }
+  },
+  "top_activation_table": "feature_top_activations.parquet",
+  "top_features_per_partition": 20
+}

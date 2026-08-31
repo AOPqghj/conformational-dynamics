@@ -1,0 +1,70 @@
+version: 1
+seed: 42
+resume: true
+
+representation:
+  name: esmfold
+  width: 1024
+
+paths:
+  catalog: data/lifecycle/final/initial_8598_dataset/homology35_seed42/catalog.parquet
+  embedding_manifest: data/lifecycle/final/initial_8598_dataset/embedding_manifest.csv
+  transition_candidates: data/lifecycle/final/initial_8598_dataset/analysis/transition_important_proteins.csv
+  annotations: data/lifecycle/final/initial_8598_dataset/analysis/dynamic_motion_driver_annotations.csv
+  ml_root: ml/results/homology35_rerun
+  interpretability_root: interpretability/results/homology35_rerun
+
+training:
+  pooled:
+    enabled: true
+    output: ml/results/homology35_rerun/pooled_frozen_models
+    cpu_threads: 2
+  cnn:
+    enabled: true
+    output: ml/results/homology35_rerun/full_matrix_cnn
+    device: auto
+    batch_size: 8
+    max_epochs: 30
+    patience: 5
+    models: [residue_cnn, residue_cnn_expanded]
+  sae:
+    enabled: true
+    output: ml/results/homology35_rerun/sae_seed42_topk64
+    frozen_output: ml/results/homology35_rerun/frozen_saes/esmfold_matrix_topk64_seed42
+    device: auto
+    epochs: 40
+    batch_size: 1024
+    residues_per_protein: 64
+    top_k: 64
+    expansion_factor: 4
+
+interpretability:
+  transition_pairs:
+    enabled: true
+    output: interpretability/results/homology35_rerun/transition_pairs
+  transition_embeddings:
+    enabled: true
+    output: interpretability/results/homology35_rerun/transition_embeddings
+  sae_associations:
+    enabled: true
+    output: interpretability/results/homology35_rerun/sae_transition_associations
+    device: auto
+    permutations: 10000
+    allow_incomplete: true
+  sae_router_tests:
+    enabled: true
+    output: interpretability/results/homology35_rerun/sae_router_feature_tests
+    device: auto
+    feature_batch_size: 4
+    random_controls: 100
+    bootstrap_draws: 2000
+    run_subtype: false
+  sae_structural_roles:
+    enabled: true
+    output: interpretability/results/homology35_rerun/sae_structural_roles
+    device: auto
+    features_per_track: 10
+    enable_esmfold_fallback: false
+  cnn_attribution:
+    enabled: false
+    reason: deferred_until_cnn_attribution_repairs_are_implemented

@@ -1,0 +1,34 @@
+{
+  "completed_proteins": 1280,
+  "config_hash": "705d1254c51875915501e871cde6b7d49acc0c4b8058798e932653fcf8388e8b",
+  "configuration": {
+    "contact_cutoff_angstrom": 4.5,
+    "controls_per_protein": 5,
+    "device": "auto",
+    "download_batch_size": 25,
+    "enable_esmfold_fallback": false,
+    "features_per_track": 10,
+    "hotspots_per_protein": 5,
+    "low_activation_quantile": 0.5,
+    "partition": "val",
+    "seed": 42,
+    "sphere_radius_angstrom": 8.0
+  },
+  "esmfold_fallbacks": 0,
+  "experimental_mappings": 3848,
+  "experimental_unavailable_proteins": 9,
+  "partition": "val",
+  "primary_analysis_excludes_esmfold_fallbacks": true,
+  "rcsb_cache": "<PROJECT_ROOT>/data/cache/rcsb_biological_assemblies",
+  "reference_comparison": {
+    "reference_effect_comparisons": 152,
+    "reference_output": "interpretability/results/homology35_rerun/sae_structural_roles",
+    "reference_replication_summary_rows": 8
+  },
+  "sae_manifest_sha256": "b38165019e6e24c3cc3f1eb6af47c6612c1dbc0afcd2f1b100cdb7a671335739",
+  "selected_features_path": "interpretability/results/homology35_rerun/sae_structural_roles/selected_features.csv",
+  "selected_features_sha256": "74bd3fd693f465f259c46784c139ac45efb47a54d20afa58582fe0234c542d02",
+  "selected_unique_features": 19,
+  "selection_source": "frozen_selected_features",
+  "total_proteins": 1289
+}

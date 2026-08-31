@@ -1,0 +1,25 @@
+[project]
+name = "protein-multistate-embeddings"
+version = "0.1.0"
+description = "Anonymous reproducibility package for protein multistate embedding experiments"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "numpy>=1.26", "pandas>=2.2", "pyarrow>=16", "pydantic>=2.7",
+  "pyyaml>=6", "requests>=2.32", "safetensors>=0.4", "scikit-learn>=1.8",
+  "torch>=2.3", "matplotlib>=3.8", "joblib>=1.4", "biopython>=1.85",
+  "biotite>=1.2", "huggingface-hub>=0.34"
+]
+
+[project.optional-dependencies]
+esmfold = ["transformers==4.48.3", "accelerate>=1.2,<2", "sentencepiece>=0.2"]
+
+[dependency-groups]
+dev = ["pytest>=8.2", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/protein_state_router"]

@@ -1,0 +1,26 @@
+{
+  "catalog_sha256": "6fab6bfd3c8d0ac852d338011f89c91232137ff9b0d02c2ccfd3c56bd45b84de",
+  "checkpoint": "<PROJECT_ROOT>/ml/results/homology35_rerun/sae_seed42_topk64/latest.pt",
+  "device": "cpu",
+  "feature_summary": "feature_activation_summary.parquet",
+  "partitions": {
+    "test": {
+      "explained_variance": 0.9453220839045401,
+      "feature_density_mean": 0.015625,
+      "mean_active_features": 64.0,
+      "proteins": 1289,
+      "reconstruction_mse": 39.45681771138015,
+      "sampled_residues": 82053
+    },
+    "val": {
+      "explained_variance": 0.9439210604791927,
+      "feature_density_mean": 0.015625,
+      "mean_active_features": 64.0,
+      "proteins": 1289,
+      "reconstruction_mse": 39.19288764283978,
+      "sampled_residues": 82260
+    }
+  },
+  "top_activation_table": "feature_top_activations.parquet",
+  "top_features_per_partition": 20
+}

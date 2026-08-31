@@ -1,0 +1,17 @@
+{
+  "association_table_sha256": "0f354a7fb92f2f8ca87af35636556de1677118cf55a9ffaa8bcb9cd04a56fc58",
+  "configuration": {
+    "allow_external_esmfold": false,
+    "control_draws": 20,
+    "device": "cpu",
+    "exclusion_radius": 5,
+    "max_external_identity": 0.98,
+    "seed": 42
+  },
+  "excluded_cases": 2,
+  "features": 4096,
+  "included_cases": 3,
+  "sae_manifest_sha256": "b38165019e6e24c3cc3f1eb6af47c6612c1dbc0afcd2f1b100cdb7a671335739",
+  "status": "completed",
+  "top_hinge_feature": 3491
+}

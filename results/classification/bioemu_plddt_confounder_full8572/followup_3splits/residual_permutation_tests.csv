@@ -1,0 +1,13 @@
+family,comparison,metric,raw_mean,residual_mean,mean_difference,paired_p,paired_method,n_splits,paired_fdr
+linear,residual_plddt_minus_raw_bioemu,accuracy,0.7193905373451721,0.7007349119633094,-0.018655625381862606,0.25,exact_paired_sign_flip,3,0.25
+linear,residual_plddt_minus_raw_bioemu,auroc,0.7918089987276691,0.7687700594040535,-0.023038939323615597,0.25,exact_paired_sign_flip,3,0.25
+linear,residual_plddt_minus_raw_bioemu,auprc,0.8133771469055286,0.798397586940343,-0.01497955996518563,0.25,exact_paired_sign_flip,3,0.25
+linear,residual_full_covariates_minus_raw_bioemu,accuracy,0.7193905373451721,0.6240965229673007,-0.09529401437787144,0.25,exact_paired_sign_flip,3,0.25
+linear,residual_full_covariates_minus_raw_bioemu,auroc,0.7918089987276691,0.6800854894520315,-0.11172350927563761,0.25,exact_paired_sign_flip,3,0.25
+linear,residual_full_covariates_minus_raw_bioemu,auprc,0.8133771469055286,0.693474355825514,-0.11990279108001474,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_plddt_minus_raw_bioemu,accuracy,0.7070226518920548,0.7199599093844969,0.012937257492442048,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_plddt_minus_raw_bioemu,auroc,0.7890662809644383,0.7981693842858152,0.009103103321376907,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_plddt_minus_raw_bioemu,auprc,0.808802821271232,0.815933689669174,0.007130868397942007,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_full_covariates_minus_raw_bioemu,accuracy,0.7070226518920548,0.6825724844676141,-0.0244501674244408,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_full_covariates_minus_raw_bioemu,auroc,0.7890662809644383,0.7423690000059712,-0.04669728095846711,0.25,exact_paired_sign_flip,3,0.25
+tree,residual_full_covariates_minus_raw_bioemu,auprc,0.808802821271232,0.7310374643631278,-0.07776535690810409,0.25,exact_paired_sign_flip,3,0.25

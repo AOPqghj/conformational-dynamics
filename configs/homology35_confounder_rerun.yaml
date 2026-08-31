@@ -1,0 +1,16 @@
+version: 1
+expected_split_count: 10
+split_seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+followup_seeds: [10, 11]
+cpu_threads: 2
+stages: [pooled, followups]
+progress_file: progress.json
+parallel: true
+
+paths:
+  catalog: data/lifecycle/final/initial_8598_dataset/homology35_seed42/catalog.parquet
+  embedding_manifest: data/lifecycle/final/initial_8598_dataset/embedding_manifest.csv
+  output_root: ml/results/homology35_confounder_rerun
+
+frozen_cnn:
+  root: ml/results/homology35_rerun/full_matrix_cnn
