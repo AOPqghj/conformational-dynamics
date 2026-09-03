@@ -1,0 +1,13 @@
+family,comparison,metric,raw_mean,residual_mean,mean_difference,paired_p,paired_method,n_splits,paired_fdr
+linear,residual_plddt_minus_raw_bioemu_no_msa,accuracy,0.6975524475524476,0.6608391608391608,-0.036713286713286775,,not_estimable_single_split,1,
+linear,residual_plddt_minus_raw_bioemu_no_msa,auroc,0.7075711382113822,0.6734068627450981,-0.03416427546628409,,not_estimable_single_split,1,
+linear,residual_plddt_minus_raw_bioemu_no_msa,auprc,0.4709132599823981,0.4526498038517789,-0.018263456130619193,,not_estimable_single_split,1,
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,accuracy,0.6975524475524476,0.6398601398601399,-0.05769230769230771,,not_estimable_single_split,1,
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,auroc,0.7075711382113822,0.6272865853658536,-0.0802845528455286,,not_estimable_single_split,1,
+linear,residual_full_covariates_minus_raw_bioemu_no_msa,auprc,0.4709132599823981,0.37733658678626425,-0.09357667319613383,,not_estimable_single_split,1,
+tree,residual_plddt_minus_raw_bioemu_no_msa,accuracy,0.7395104895104895,0.7412587412587412,0.0017482517482517723,,not_estimable_single_split,1,
+tree,residual_plddt_minus_raw_bioemu_no_msa,auroc,0.7076832257293163,0.7108291487326639,0.003145923003347595,,not_estimable_single_split,1,
+tree,residual_plddt_minus_raw_bioemu_no_msa,auprc,0.5329647851123162,0.5162450436424706,-0.01671974146984556,,not_estimable_single_split,1,
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,accuracy,0.7395104895104895,0.7167832167832168,-0.022727272727272707,,not_estimable_single_split,1,
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,auroc,0.7076832257293163,0.5969332855093257,-0.11074994021999063,,not_estimable_single_split,1,
+tree,residual_full_covariates_minus_raw_bioemu_no_msa,auprc,0.5329647851123162,0.40808743792660296,-0.1248773471857132,,not_estimable_single_split,1,

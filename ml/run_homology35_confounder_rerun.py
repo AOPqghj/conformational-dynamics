@@ -203,6 +203,17 @@ def _validate_inputs(root: Path, values: dict[str, Any]) -> tuple[Path, Path, pd
         raise ValueError(
             f"expected {expected_rows:,} pLDDT-observed, embedding-covered proteins with both classes"
         )
+    # A shared cohort catalog may retain paths for a different representation
+    # (for example, ESMFold).  The manifest is authoritative for the selected
+    # representation, so materialize its paths into the isolated run catalog.
+    eligible = eligible.drop(columns="embedding_path", errors="ignore").merge(
+        manifest[["protein_id", "embedding_path"]],
+        on="protein_id",
+        how="left",
+        validate="one_to_one",
+    )
+    if eligible.embedding_path.isna().any():
+        raise ValueError("embedding manifest did not provide every eligible embedding path")
     return catalog_path, manifest_path, eligible
 
 
@@ -351,8 +362,13 @@ def run(config_path: Path) -> None:
     if not requested_views or invalid_views:
         raise ValueError(f"invalid stratification_views: {sorted(invalid_views)}")
     followup.STRATIFIED_VIEWS = requested_views
+    default_pooled_views = (
+        "covariates",
+        "embedding",
+        f"covariates_plus_{representation_name}",
+    )
     benchmark.FEATURE_VIEWS = tuple(
-        str(view) for view in values.get("pooled_views", benchmark.FEATURE_VIEWS)
+        str(view) for view in values.get("pooled_views", default_pooled_views)
     )
     valid_pooled_views = {"covariates", "embedding", f"covariates_plus_{representation_name}"}
     if not benchmark.FEATURE_VIEWS or not set(benchmark.FEATURE_VIEWS).issubset(valid_pooled_views):

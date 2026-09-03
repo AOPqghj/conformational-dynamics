@@ -15,12 +15,13 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from matplotlib.lines import Line2D
-from scipy.optimize import linear_sum_assignment
-from scipy.sparse import coo_matrix
+matplotlib.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42})
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from scipy.optimize import linear_sum_assignment  # noqa: E402
+from scipy.sparse import coo_matrix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ESMFOLD_ASSOCIATIONS = (
@@ -35,9 +36,9 @@ DEFAULT_ESMFOLD_STRUCTURAL = ROOT / "interpretability/results/homology35_rerun/s
 DEFAULT_BIOEMU_STRUCTURAL = (
     ROOT / "interpretability/results/homology35_bioemu_8572_sae_structural_roles"
 )
-DEFAULT_OUTPUT = ROOT / "neurips-workshop/figures"
+DEFAULT_OUTPUT = ROOT / "AA-upgraded-neurips-workshop/figures"
 DEFAULT_PANEL_B_IMAGE = (
-    ROOT / "neurips-workshop/figures/sae_region_candidates_two_conformations/"
+    ROOT / "AA-upgraded-neurips-workshop/figures/sae_region_candidates_two_conformations/"
     "TAGGED_014_pathpre_MS_MS_pair_209_feature2961_two_conformations_cropped.png"
 )
 FDR_ALPHA = 0.05
@@ -242,9 +243,9 @@ def _panel_label(axis: plt.Axes, label: str) -> None:
 
 def _format_axis(axis: plt.Axes) -> None:
     axis.grid(alpha=0.22, linewidth=0.7)
-    axis.tick_params(axis="both", labelsize=7)
-    axis.xaxis.label.set_size(7.5)
-    axis.yaxis.label.set_size(7.5)
+    axis.tick_params(axis="both", labelsize=8.0)
+    axis.xaxis.label.set_size(8.5)
+    axis.yaxis.label.set_size(8.5)
 
 
 def _render_association_panel(axis: plt.Axes, associations: pd.DataFrame) -> dict[str, int]:
@@ -283,7 +284,7 @@ def _render_association_panel(axis: plt.Axes, associations: pd.DataFrame) -> dic
     axis.legend(
         loc="upper left",
         frameon=False,
-        fontsize=4.8,
+        fontsize=6.5,
         markerscale=0.7,
         borderpad=0.1,
         handletextpad=0.3,
@@ -295,8 +296,8 @@ def _render_association_panel(axis: plt.Axes, associations: pd.DataFrame) -> dic
 
 def _render_structural_panel(axis: plt.Axes, table: pd.DataFrame) -> plt.Axes:
     sasa = table.loc[table.metric.eq("sasa_angstrom2")]
-    atom_density = table.loc[table.metric.eq("contact_density")]
-    if len(sasa) != len(atom_density) or sasa.empty:
+    direct_contacts = table.loc[table.metric.eq("contact_density")]
+    if len(sasa) != len(direct_contacts) or sasa.empty:
         raise ValueError("structural feature matches must have both metrics")
     sasa_limits = _symmetric_limits(np.concatenate((sasa.effect_esmfold, sasa.effect_bioemu)))
     axis.set(
@@ -321,19 +322,19 @@ def _render_structural_panel(axis: plt.Axes, table: pd.DataFrame) -> plt.Axes:
     axis.axhline(0, color="#9a9a9a", linewidth=0.55, zorder=0)
     axis.axvline(0, color="#9a9a9a", linewidth=0.55, zorder=0)
     density_axis = axis.figure.add_axes(
-        axis.get_position(), frameon=False, label="atom_density_effects"
+        axis.get_position(), frameon=False, label="direct_contact_effects"
     )
     density_axis.patch.set_alpha(0)
     density_limits = _symmetric_limits(
-        np.concatenate((atom_density.effect_esmfold, atom_density.effect_bioemu))
+        np.concatenate((direct_contacts.effect_esmfold, direct_contacts.effect_bioemu))
     )
     density_axis.set(
         xlim=density_limits,
         ylim=density_limits,
-        xlabel="ESMFold direct-contact effect",
-        ylabel="BioEMU direct-contact effect",
+        xlabel="ESMFold direct-contact count",
+        ylabel="BioEMU direct-contact count",
     )
-    for row in atom_density.itertuples(index=False):
+    for row in direct_contacts.itertuples(index=False):
         density_axis.scatter(
             row.effect_esmfold,
             row.effect_bioemu,
@@ -355,10 +356,10 @@ def _render_structural_panel(axis: plt.Axes, table: pd.DataFrame) -> plt.Axes:
     density_axis.xaxis.set_label_position("top")
     density_axis.yaxis.set_label_position("right")
     density_axis.tick_params(
-        axis="both", which="both", labelsize=7.0, top=True, right=True, bottom=False, left=False
+        axis="both", which="both", labelsize=7.5, top=True, right=True, bottom=False, left=False
     )
-    density_axis.xaxis.label.set_size(7.2)
-    density_axis.yaxis.label.set_size(7.2)
+    density_axis.xaxis.label.set_size(8.0)
+    density_axis.yaxis.label.set_size(8.0)
     density_axis.spines["bottom"].set_visible(False)
     density_axis.spines["left"].set_visible(False)
     legend = [
@@ -388,7 +389,7 @@ def _render_structural_panel(axis: plt.Axes, table: pd.DataFrame) -> plt.Axes:
         handles=legend,
         loc="lower right",
         frameon=False,
-        fontsize=4.8,
+        fontsize=6.2,
         ncol=2,
         borderpad=0.1,
         handletextpad=0.3,

@@ -14,17 +14,28 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.metrics import roc_auc_score, roc_curve
+matplotlib.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42})
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.metrics import roc_auc_score, roc_curve  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "neurips-workshop/figures"))
+FIGURE_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(FIGURE_ROOT))
 
 import build_frozen_model_routing_curves as frozen  # noqa: E402
 import build_sae_interpretability_panels as sae  # noqa: E402
+from protein_state_router.experiments.benchmark import (  # noqa: E402
+    BenchmarkConfig,
+    run_benchmark,
+    sequence_feature_matrix,
+)
 
-OUTPUT = ROOT / "neurips-workshop/figures/small_combined_frozen_sae_panels.pdf"
+OUTPUT = FIGURE_ROOT / "small_combined_frozen_sae_panels.pdf"
+COMMON_TEST_COVARIATE_ROOT = (
+    ROOT / "ml/results/homology35_rerun/common_test_covariate_models"
+)
 
 
 def _label(axis: plt.Axes, label: str, *, y: float = 1.04) -> None:
@@ -36,9 +47,64 @@ def _label(axis: plt.Axes, label: str, *, y: float = 1.04) -> None:
 
 def _format(axis: plt.Axes) -> None:
     axis.grid(alpha=0.22, linewidth=0.7)
-    axis.tick_params(axis="both", labelsize=7)
-    axis.xaxis.label.set_size(7.5)
-    axis.yaxis.label.set_size(7.5)
+    axis.tick_params(axis="both", labelsize=8.0)
+    axis.xaxis.label.set_size(8.5)
+    axis.yaxis.label.set_size(8.5)
+
+
+def _common_test_covariates(
+    models: list[frozen.ModelPredictions],
+) -> list[frozen.ModelPredictions]:
+    """Fit/load covariate baselines on the frozen models' exact split.
+
+    The previous figure pooled covariate predictions across repeated splits,
+    which changed both test membership and per-protein weighting.  These two
+    baselines instead use the catalog's locked train/validation/test column and
+    are required to have the same held-out proteins and labels as the frozen
+    embedding models before Panel A is rendered.
+    """
+    catalog = pd.read_parquet(frozen.DEFAULT_CATALOG).copy()
+    required = {"protein_id", "dataset_label", "split", "alphafold_mean_plddt"}
+    if missing := required - set(catalog):
+        raise ValueError(f"frozen catalog missing columns: {sorted(missing)}")
+    if set(catalog.split) != {"train", "val", "test"}:
+        raise ValueError("frozen catalog must retain train, val, and test partitions")
+    sequence, names = sequence_feature_matrix(catalog)
+    train = catalog.split.eq("train").to_numpy()
+    plddt = catalog.alphafold_mean_plddt.to_numpy(dtype=np.float32)
+    training_median = float(np.nanmedian(plddt[train]))
+    if not np.isfinite(training_median):
+        raise ValueError("frozen training split has no finite pLDDT values")
+    plddt = np.where(np.isfinite(plddt), plddt, training_median).astype(np.float32)
+    features = np.column_stack((sequence, plddt))
+    feature_names = (*names, "alphafold_mean_plddt_train_median_imputed")
+    definitions = (
+        ("Covariate-only linear", "#66a61e", "linear", "linear_covariates"),
+        ("Covariate-only tree", "#e6ab02", "tree", "tree_covariates"),
+    )
+    outputs: list[frozen.ModelPredictions] = []
+    for label, color, family, directory_name in definitions:
+        directory = COMMON_TEST_COVARIATE_ROOT / directory_name
+        prediction_path = directory / "test_predictions.parquet"
+        selection_path = directory / "validation_selection.json"
+        if not (prediction_path.is_file() and selection_path.is_file()):
+            run_benchmark(
+                frozen.DEFAULT_CATALOG,
+                directory,
+                BenchmarkConfig(
+                    family=family,
+                    random_seed=42,
+                    search="standard",
+                    cpu_threads=1,
+                    save_model=False,
+                ),
+                features=features,
+                feature_names=feature_names,
+                dataset_reference=str(frozen.DEFAULT_CATALOG.relative_to(ROOT)),
+            )
+        outputs.append(frozen.load_predictions(label, color, directory))
+    frozen.verify_shared_test_set([*models, *outputs])
+    return outputs
 
 
 def _frozen_inputs() -> tuple[list[frozen.ModelPredictions], list[frozen.ModelPredictions], object, frozen.ModelPredictions, object]:
@@ -50,16 +116,13 @@ def _frozen_inputs() -> tuple[list[frozen.ModelPredictions], list[frozen.ModelPr
         frozen.load_predictions("Histogram gradient tree", "#d95f02", results / "pooled_frozen_models/esmfold_single_tree"),
         frozen.load_predictions("Full-matrix CNN", "#7570b3", cnn_directory),
     ]
-    covariates = [
-        frozen.load_repeated_predictions("Covariate-only linear", "#66a61e", confounders / "pooled_confounder", "linear_covariates"),
-        frozen.load_repeated_predictions("Covariate-only tree", "#e6ab02", confounders / "pooled_confounder", "tree_covariates"),
-    ]
+    covariates = _common_test_covariates(models)
     return models, covariates, frozen.load_residual_panel(confounders), models[-1], frozen.load_catalog(frozen.DEFAULT_CATALOG)
 
 
 def _draw_frozen(roc: plt.Axes, residual: plt.Axes, plddt: plt.Axes) -> None:
     models, covariates, residuals, cnn, catalog = _frozen_inputs()
-    labels = frozen.verify_shared_test_set(models)
+    frozen.verify_shared_test_set([*models, *covariates])
     for axis, letter in ((roc, "A"), (residual, "B"), (plddt, "C")):
         _label(axis, letter, y=1.10 if letter in {"B", "C"} else 1.04)
         _format(axis)
@@ -76,7 +139,7 @@ def _draw_frozen(roc: plt.Axes, residual: plt.Axes, plddt: plt.Axes) -> None:
             label=f"{model.label} (AUROC {roc_auc_score(y, probability):.3f})",
         )
     roc.set(xlabel="False-positive rate", ylabel="True-positive rate", xlim=(0, 1), ylim=(0, 1.02))
-    roc.legend(loc="lower right", frameon=False, fontsize=5.0, ncol=2)
+    roc.legend(loc="lower right", frameon=False, fontsize=6.2, ncol=2)
 
     categories = list(frozen.RESIDUAL_CATEGORY_ORDER)
     x = np.arange(len(categories))
@@ -86,21 +149,22 @@ def _draw_frozen(roc: plt.Axes, residual: plt.Axes, plddt: plt.Axes) -> None:
         if values.isna().any():
             raise ValueError(f"incomplete residual AUROC categories for {family} seed {seed}")
         residual.plot(x, values.to_numpy(float), marker="o", linewidth=1.4, linestyle=":", color=colors[family], alpha=0.8, label=f"{family.title()} split {seed}")
-    residual.set(ylabel="Test AUROC", xticks=x, xticklabels=["All covariate\nresidualized", "pLDDT\nresidualized", "Raw\nembedding"], ylim=(0.5, 0.9))
-    residual.legend(loc="lower left", frameon=False, fontsize=4.8, ncol=2)
+    residual.set(ylabel="Test AUROC", xticks=x, xticklabels=["All covariates\nremoved", "pLDDT\nremoved", "Raw\nembedding"], ylim=(0.5, 0.9))
+    residual.legend(loc="lower left", frameon=False, fontsize=5.8, ncol=1)
 
     points = cnn.predictions.merge(catalog, on="protein_id", how="inner", validate="one_to_one", suffixes=("_prediction", "_catalog"))
     points = points.loc[points.alphafold_mean_plddt.ge(70)].copy()
     plddt.scatter(points.probability, points.alphafold_mean_plddt, c=points.dataset_label_prediction.map({0: "#4c78a8", 1: "#e45756"}), alpha=0.72, s=11, linewidth=0.25, edgecolors="white")
     plddt.axhline(70, color="#777777", linewidth=0.9, linestyle="--")
     plddt.axhline(90, color="#777777", linewidth=0.9, linestyle=":")
-    plddt.set(xlabel="Predicted multistate probability", ylabel="Mean pLDDT", xlim=(0, 1))
+    plddt.set(xlabel="Multistate probability", ylabel="Mean pLDDT", xlim=(0, 1))
+    plddt.yaxis.set_label_coords(-0.09, 0.5)
     style = dict(boxstyle="round,pad=0.3", facecolor="#BFBFD6", edgecolor="#676775", alpha=0.5)
-    plddt.text(0.02, 0.075, "medium", transform=plddt.transAxes, va="top", fontsize=8, bbox=style, weight="bold")
-    plddt.text(0.02, 0.705, "high", transform=plddt.transAxes, va="top", fontsize=8, bbox=style, weight="bold")
+    plddt.text(0.02, 0.075, "medium", transform=plddt.transAxes, va="top", fontsize=8.0, bbox=style, weight="bold")
+    plddt.text(0.02, 0.705, "high", transform=plddt.transAxes, va="top", fontsize=8.0, bbox=style, weight="bold")
     plddt.scatter([], [], color="#4c78a8", label="Static")
     plddt.scatter([], [], color="#e45756", label="Dynamic")
-    plddt.legend(loc="lower right", frameon=True, framealpha=0.3, facecolor="#BFBFD6", prop={"size": 4.0, "weight": "bold"}, markerscale=0.45, borderpad=0.25, handlelength=1.0, handletextpad=0.35, labelspacing=0.2)
+    plddt.legend(loc="lower right", frameon=True, framealpha=0.3, facecolor="#BFBFD6", prop={"size": 5.5, "weight": "bold"}, markerscale=0.35, borderpad=0.25, handlelength=0.8, handletextpad=0.25, labelspacing=0.15)
 
 
 def _draw_sae(
@@ -113,7 +177,36 @@ def _draw_sae(
     sae._format_axis(association)
     sae._format_axis(structural)
     sae._render_association_panel(association, associations)
+    association.set_ylabel("PRS association (ρ × 10⁻²)")
+    association.yaxis.set_major_formatter(
+        matplotlib.ticker.FuncFormatter(lambda value, _: f"{value * 100:.0f}")
+    )
     density_axis = sae._render_structural_panel(structural, comparison)
+    association_position = association.get_position()
+    association.set_position(
+        [
+            association_position.x0 + 0.012,
+            association_position.y0,
+            association_position.width - 0.012,
+            association_position.height,
+        ]
+    )
+    structural_position = structural.get_position()
+    structural.set_position(
+        [
+            structural_position.x0 + 0.012,
+            structural_position.y0,
+            structural_position.width - 0.012,
+            structural_position.height,
+        ]
+    )
+    # Keep the left-axis titles outside their plotting areas. Positive axis
+    # coordinates placed both labels directly on the y-axis spines.
+    association.yaxis.set_label_coords(-0.045, 0.5)
+    structural.yaxis.set_label_coords(-0.11, 0.5)
+    label_box = {"facecolor": "white", "edgecolor": "none", "alpha": 0.72, "pad": 1.0}
+    association.yaxis.label.set_bbox(label_box)
+    structural.yaxis.label.set_bbox(label_box)
     density_axis.set_position(structural.get_position())
     # Keep E's secondary (top/right) axis attached to its plotting area. The
     # default padding is tuned for a standalone panel and looked detached in
@@ -134,7 +227,6 @@ def _draw_sae(
     density_axis.set_yticks(direct_ticks)
     # Separate the two y-axis titles cleanly: the primary title remains close
     # to E, while the secondary title sits beyond its right-hand tick labels.
-    structural.yaxis.labelpad = -1
     density_axis.yaxis.set_label_coords(1.10, 0.5)
     # The two overlaid scales should read as one comparison plot.  Keep the
     # primary SASA zero-cross/identity guide only, rather than duplicating
@@ -186,14 +278,14 @@ def _draw_sae(
 def main() -> None:
     # A/D share the top row exactly. B/C/E/F share the bottom-row height;
     # E is widened to two columns and F spans three columns.
-    figure = plt.figure(figsize=(12.8, 7.4), facecolor="white")
+    figure = plt.figure(figsize=(12.8, 7.1), facecolor="white")
     grid = figure.add_gridspec(
         2,
         9,
         width_ratios=(0.68, 0.68, 1.12, 1.12, 1.0, 1.0, 1.0, 1.0, 1.0),
         height_ratios=(1, 1),
-        hspace=0.36,
-        wspace=0.52,
+        hspace=0.38,
+        wspace=0.54,
     )
     roc = figure.add_subplot(grid[0, 0:4])
     association = figure.add_subplot(grid[0, 4:9])

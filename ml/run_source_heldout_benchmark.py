@@ -56,13 +56,25 @@ DEFAULT_CATALOGS = {
         "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
         "bioemu_8572_catalog.parquet"
     ),
+    "bioemu_no_msa": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
+        "bioemu_no_msa_8572_catalog.parquet"
+    ),
+    "esm2_3b": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
+        "esm2_3b_8566_catalog.parquet"
+    ),
 }
-WIDTHS = {"esmfold": 1024, "bioemu": 384}
+WIDTHS = {"esmfold": 1024, "bioemu": 384, "bioemu_no_msa": 384, "esm2_3b": 2560}
 FIXED_CANDIDATES = {
     ("esmfold", "linear"): "logistic_l1_C0.1",
     ("esmfold", "tree"): "hist_gradient_leaf31_lr0.03",
     ("bioemu", "linear"): "logistic_l1_C0.1",
     ("bioemu", "tree"): "hist_gradient_leaf31_lr0.08",
+    ("bioemu_no_msa", "linear"): "logistic_l1_C0.1",
+    ("bioemu_no_msa", "tree"): "hist_gradient_leaf15_lr0.08",
+    ("esm2_3b", "linear"): "logistic_l2_C0.01",
+    ("esm2_3b", "tree"): "hist_gradient_leaf15_lr0.08",
 }
 SOURCE_LABELS = {
     "atlas": "atlas",
@@ -459,12 +471,19 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--save-models", action="store_true")
     parser.add_argument("--replace", action="store_true")
-    parser.add_argument(
-        "--esmfold-catalog", type=Path, default=DEFAULT_CATALOGS["esmfold"]
-    )
+    parser.add_argument("--esmfold-catalog", type=Path, default=DEFAULT_CATALOGS["esmfold"])
     parser.add_argument("--bioemu-catalog", type=Path, default=DEFAULT_CATALOGS["bioemu"])
+    parser.add_argument(
+        "--bioemu-no-msa-catalog", type=Path, default=DEFAULT_CATALOGS["bioemu_no_msa"]
+    )
+    parser.add_argument("--esm2-3b-catalog", type=Path, default=DEFAULT_CATALOGS["esm2_3b"])
     args = parser.parse_args()
-    args.catalogs = {"esmfold": args.esmfold_catalog, "bioemu": args.bioemu_catalog}
+    args.catalogs = {
+        "esmfold": args.esmfold_catalog,
+        "bioemu": args.bioemu_catalog,
+        "bioemu_no_msa": args.bioemu_no_msa_catalog,
+        "esm2_3b": args.esm2_3b_catalog,
+    }
     if args.cpu_threads < 1 or args.bootstrap_replicates < 1:
         parser.error("cpu threads and bootstrap replicates must be positive")
     return args

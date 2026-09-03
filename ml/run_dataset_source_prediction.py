@@ -37,7 +37,39 @@ from ml.train_frozen_8598_models import pooled_features
 from protein_state_router.evaluation.inference import benjamini_hochberg
 from protein_state_router.experiments.benchmark import sequence_feature_matrix
 
-EXPECTED_ROWS = 8598
+REPRESENTATION_WIDTHS = {
+    "esmfold": 1024,
+    "bioemu": 384,
+    "bioemu_no_msa": 384,
+    "esm2_3b": 2560,
+}
+DEFAULT_CATALOGS = {
+    "esmfold": Path("data/lifecycle/final/initial_8598_dataset/homology35_seed42/catalog.parquet"),
+    "bioemu": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/bioemu_8572_catalog.parquet"
+    ),
+    "bioemu_no_msa": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
+        "bioemu_no_msa_8572_catalog.parquet"
+    ),
+    "esm2_3b": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/esm2_3b_8566_catalog.parquet"
+    ),
+}
+DEFAULT_EMBEDDING_MANIFESTS = {
+    "esmfold": Path("data/lifecycle/final/initial_8598_dataset/embedding_manifest.csv"),
+    "bioemu": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/bioemu_8572_embedding_manifest.csv"
+    ),
+    "bioemu_no_msa": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
+        "bioemu_no_msa_8572_embedding_manifest.csv"
+    ),
+    "esm2_3b": Path(
+        "data/lifecycle/final/initial_8598_dataset/homology35_seed42/"
+        "esm2_3b_8566_embedding_manifest.csv"
+    ),
+}
 EXPECTED_SOURCES = {
     "all": ("atlas", "dynamicmpnn", "pathpre", "promise", "rcsb"),
     "dynamic_only": ("dynamicmpnn", "pathpre", "promise"),
@@ -236,41 +268,81 @@ def evaluate_view(
     return report
 
 
+def completed_view_report(
+    output: Path,
+    *,
+    cohort: str,
+    feature_view: str,
+    rows: int,
+    folds: int,
+) -> dict[str, Any] | None:
+    """Return a verified completed view report, if one already exists.
+
+    Source-prediction views are self-contained.  Reusing a completed view makes a
+    restarted run finalize safely after an interruption without refitting models.
+    """
+    path = output / "summary.json"
+    if not path.exists():
+        return None
+    try:
+        report = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    if (
+        report.get("status") != "complete"
+        or report.get("cohort") != cohort
+        or report.get("feature_view") != feature_view
+        or report.get("rows") != rows
+        or report.get("folds") != folds
+    ):
+        return None
+    return report
+
+
 def run(
     catalog_path: Path,
     embedding_manifest_path: Path,
     output: Path,
     *,
+    representation: str = "esmfold",
+    expected_rows: int | None = None,
     folds: int = 5,
     permutations: int = 1000,
     seed: int = 42,
     cpu_threads: int = 2,
 ) -> dict[str, Any]:
+    if representation not in REPRESENTATION_WIDTHS:
+        raise ValueError(f"unsupported representation: {representation}")
     catalog = pd.read_parquet(catalog_path).copy()
     required = {"protein_id", "dataset_label", "homology_group_id", "sequence"}
     if missing := required - set(catalog):
         raise ValueError(f"catalog missing columns: {sorted(missing)}")
-    if len(catalog) != EXPECTED_ROWS or catalog.protein_id.duplicated().any():
-        raise ValueError(f"expected the unique {EXPECTED_ROWS:,}-protein catalog")
+    if expected_rows is not None and len(catalog) != expected_rows:
+        raise ValueError(f"expected {expected_rows:,} catalog rows, found {len(catalog):,}")
+    if catalog.protein_id.duplicated().any():
+        raise ValueError("catalog contains duplicate protein IDs")
     manifest = pd.read_csv(embedding_manifest_path)
     if manifest.protein_id.duplicated().any() or set(manifest.protein_id) != set(
         catalog.protein_id
     ):
-        raise ValueError("ESMFold manifest must exactly cover the source-prediction catalog")
+        raise ValueError("embedding manifest must exactly cover the source-prediction catalog")
     catalog = catalog.drop(columns="embedding_path", errors="ignore").merge(
         manifest[["protein_id", "embedding_path"]], on="protein_id", validate="one_to_one"
     )
     catalog["origin_source"] = catalog.protein_id.map(origin_source)
     masks = source_cohorts(catalog)
     sequence, sequence_names = sequence_feature_matrix(catalog)
-    pooled = pooled_features(catalog, 1024)
+    pooled = pooled_features(catalog, REPRESENTATION_WIDTHS[representation])
     output.mkdir(parents=True, exist_ok=True)
     progress_path = output / "progress.json"
     records: list[dict[str, Any]] = []
     permutation_records: list[dict[str, Any]] = []
     feature_views = {
         "sequence_covariates": (sequence, tuple(sequence_names)),
-        "pooled_esmfold": (pooled, tuple(f"pooled_{index}" for index in range(pooled.shape[1]))),
+        f"pooled_{representation}": (
+            pooled,
+            tuple(f"pooled_{index}" for index in range(pooled.shape[1])),
+        ),
     }
     for cohort, mask in masks.items():
         frame = catalog.loc[mask].reset_index(drop=True)
@@ -278,17 +350,26 @@ def run(
             selected = values[mask]
             if selected.shape != (len(frame), len(names)):
                 raise AssertionError("source-prediction feature matrix is misaligned")
-            report = evaluate_view(
-                frame,
-                selected,
+            view_output = output / cohort / feature_view
+            report = completed_view_report(
+                view_output,
                 cohort=cohort,
                 feature_view=feature_view,
-                output=output / cohort / feature_view,
+                rows=len(frame),
                 folds=folds,
-                permutations=permutations,
-                seed=seed,
-                cpu_threads=cpu_threads,
             )
+            if report is None:
+                report = evaluate_view(
+                    frame,
+                    selected,
+                    cohort=cohort,
+                    feature_view=feature_view,
+                    output=view_output,
+                    folds=folds,
+                    permutations=permutations,
+                    seed=seed,
+                    cpu_threads=cpu_threads,
+                )
             records.append(
                 {
                     "cohort": cohort,
@@ -329,6 +410,8 @@ def run(
         "updated_at_utc": now(),
         "catalog": str(catalog_path),
         "embedding_manifest": str(embedding_manifest_path),
+        "representation": representation,
+        "embedding_width": REPRESENTATION_WIDTHS[representation],
         "folds": folds,
         "permutations": permutations,
         "experiments": records,
@@ -344,13 +427,13 @@ def run(
 
 
 def main() -> None:
-    dataset = Path("data/lifecycle/final/initial_8598_dataset")
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--representation", choices=tuple(REPRESENTATION_WIDTHS), default="esmfold")
     parser.add_argument(
-        "--catalog", type=Path, default=dataset / "homology35_seed42/catalog.parquet"
+        "--catalog", type=Path
     )
     parser.add_argument(
-        "--embedding-manifest", type=Path, default=dataset / "embedding_manifest.csv"
+        "--embedding-manifest", type=Path
     )
     parser.add_argument(
         "--output",
@@ -361,7 +444,14 @@ def main() -> None:
     parser.add_argument("--permutations", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--cpu-threads", type=int, default=2)
+    parser.add_argument("--expected-rows", type=int)
     args = parser.parse_args()
+    if args.catalog is None:
+        args.catalog = DEFAULT_CATALOGS[args.representation]
+    if args.embedding_manifest is None:
+        args.embedding_manifest = DEFAULT_EMBEDDING_MANIFESTS[args.representation]
+    if args.expected_rows is None:
+        args.expected_rows = 8598 if args.representation == "esmfold" else 8572
     for name in (
         "OMP_NUM_THREADS",
         "MKL_NUM_THREADS",
@@ -375,6 +465,8 @@ def main() -> None:
                 args.catalog,
                 args.embedding_manifest,
                 args.output,
+                representation=args.representation,
+                expected_rows=args.expected_rows,
                 folds=args.folds,
                 permutations=args.permutations,
                 seed=args.seed,

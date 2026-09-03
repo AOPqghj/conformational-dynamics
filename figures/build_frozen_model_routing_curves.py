@@ -17,10 +17,11 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.metrics import roc_auc_score, roc_curve
+matplotlib.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42})
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.metrics import roc_auc_score, roc_curve  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RESULTS = ROOT / "ml/results/homology35_rerun"

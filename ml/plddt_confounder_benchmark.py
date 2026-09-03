@@ -129,11 +129,16 @@ def _paired_reports(results: pd.DataFrame) -> list[dict[str, object]]:
                 name = metric.removeprefix("test_")
                 baseline = paired[(metric, baseline_view)]
                 enriched = paired[(metric, enriched_view)]
-                test = paired_sign_flip_test((enriched - baseline).to_numpy())
+                differences = (enriched - baseline).to_numpy()
                 report[f"mean_{baseline_view}_{name}"] = baseline.mean()
                 report[f"mean_{enriched_view}_{name}"] = enriched.mean()
-                report[f"paired_{name}_p"] = test["permutation_p_two_sided"]
-                report[f"paired_{name}_method"] = test["permutation_method"]
+                if np.count_nonzero(np.isfinite(differences)) >= 2:
+                    test = paired_sign_flip_test(differences)
+                    report[f"paired_{name}_p"] = test["permutation_p_two_sided"]
+                    report[f"paired_{name}_method"] = test["permutation_method"]
+                else:
+                    report[f"paired_{name}_p"] = np.nan
+                    report[f"paired_{name}_method"] = "not_estimable_single_split"
             reports.append(report)
 
     combined = results.loc[results.feature_view.eq(f"covariates_plus_{REPRESENTATION_NAME}")].pivot(
@@ -149,16 +154,25 @@ def _paired_reports(results: pd.DataFrame) -> list[dict[str, object]]:
         name = metric.removeprefix("test_")
         linear = combined[(metric, "linear")]
         tree = combined[(metric, "tree")]
-        test = paired_sign_flip_test((tree - linear).to_numpy())
+        differences = (tree - linear).to_numpy()
         report[f"mean_linear_{name}"] = linear.mean()
         report[f"mean_tree_{name}"] = tree.mean()
-        report[f"mean_tree_minus_linear_{name}"] = (tree - linear).mean()
-        report[f"paired_{name}_p"] = test["permutation_p_two_sided"]
-        report[f"paired_{name}_method"] = test["permutation_method"]
+        report[f"mean_tree_minus_linear_{name}"] = differences.mean()
+        if np.count_nonzero(np.isfinite(differences)) >= 2:
+            test = paired_sign_flip_test(differences)
+            report[f"paired_{name}_p"] = test["permutation_p_two_sided"]
+            report[f"paired_{name}_method"] = test["permutation_method"]
+        else:
+            report[f"paired_{name}_p"] = np.nan
+            report[f"paired_{name}_method"] = "not_estimable_single_split"
     reports.append(report)
     p_keys = sorted({key for report in reports for key in report if key.endswith("_p")})
-    values = np.asarray([report.get(key, 1.0) for report in reports for key in p_keys])
-    adjusted = benjamini_hochberg(values).reshape(len(reports), len(p_keys))
+    values = np.asarray([report.get(key, np.nan) for report in reports for key in p_keys], dtype=float)
+    adjusted = np.full(values.shape, np.nan, dtype=float)
+    finite = np.isfinite(values)
+    if finite.any():
+        adjusted[finite] = benjamini_hochberg(values[finite])
+    adjusted = adjusted.reshape(len(reports), len(p_keys))
     for row_index, report in enumerate(reports):
         for column_index, key in enumerate(p_keys):
             report[key.removesuffix("_p") + "_fdr"] = float(adjusted[row_index, column_index])
@@ -262,6 +276,13 @@ if __name__ == "__main__":
     parser.add_argument("--representation-name", choices=representation_choices(), default="esmfold")
     parser.add_argument("--expected-rows", type=int)
     parser.add_argument("--seeds", type=int, nargs="+", default=SEEDS)
+    parser.add_argument(
+        "--feature-views",
+        nargs="+",
+        choices=("covariates", "embedding", "combined"),
+        default=("covariates", "embedding", "combined"),
+        help="Run only the requested raw input views; combined means covariates plus embeddings.",
+    )
     args = parser.parse_args()
     ROOT = args.catalog.parent.parent
     CATALOG_PATH = args.catalog
@@ -271,4 +292,8 @@ if __name__ == "__main__":
     SEEDS = tuple(args.seeds)
     REPRESENTATION_NAME = args.representation_name
     EXPECTED_ROWS = args.expected_rows
+    FEATURE_VIEWS = tuple(
+        f"covariates_plus_{REPRESENTATION_NAME}" if view == "combined" else view
+        for view in args.feature_views
+    )
     main()

@@ -44,6 +44,7 @@ def build(
     output_root: Path,
     *,
     seed: int = 42,
+    additional_manifests: dict[str, Path] | None = None,
 ) -> dict[str, Any]:
     catalog = pd.read_parquet(catalog_path)
     required = {"protein_id", "dataset_label", "homology_group_id", "split"}
@@ -53,7 +54,13 @@ def build(
         raise ValueError("catalog protein IDs must be unique")
     esmfold = pd.read_csv(esmfold_manifest_path)
     bioemu = pd.read_csv(bioemu_manifest_path)
-    for name, manifest in (("esmfold", esmfold), ("bioemu", bioemu)):
+    manifest_paths = {
+        "esmfold": esmfold_manifest_path,
+        "bioemu": bioemu_manifest_path,
+        **(additional_manifests or {}),
+    }
+    loaded_manifests = {name: pd.read_csv(path) for name, path in manifest_paths.items()}
+    for name, manifest in loaded_manifests.items():
         if manifest.protein_id.duplicated().any() or not {
             "protein_id",
             "embedding_path",
@@ -85,7 +92,8 @@ def build(
         split_output, index=False
     )
     manifest_outputs: dict[str, Path] = {}
-    for name, manifest in (("esmfold", esmfold), ("bioemu", bioemu)):
+    selected_manifests: dict[str, pd.DataFrame] = {}
+    for name, manifest in loaded_manifests.items():
         selected = cohort[["protein_id"]].merge(
             manifest[["protein_id", "embedding_path"]], on="protein_id", validate="one_to_one"
         )
@@ -94,6 +102,8 @@ def build(
             or not selected.embedding_path.map(lambda value: Path(str(value)).is_file()).all()
         ):
             raise FileNotFoundError(f"{name} manifest does not resolve all matched embeddings")
+        selected_manifests[name] = selected
+    for name, selected in selected_manifests.items():
         destination = output_root / f"{name}_embedding_manifest.csv"
         selected.to_csv(destination, index=False)
         manifest_outputs[name] = destination
@@ -131,7 +141,22 @@ def main() -> None:
     )
     parser.add_argument("--output-root", type=Path, default=frozen / "pathpre_only_controls")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--additional-manifest",
+        action="append",
+        default=[],
+        metavar="NAME=PATH",
+        help="Additional embedding manifests to subset to the matched PathPre cohort.",
+    )
     args = parser.parse_args()
+    additional: dict[str, Path] = {}
+    for value in args.additional_manifest:
+        name, separator, raw_path = value.partition("=")
+        if not separator or not name or not raw_path:
+            parser.error("--additional-manifest must use NAME=PATH")
+        if name in {"esmfold", "bioemu"} or name in additional:
+            parser.error(f"duplicate or reserved manifest name: {name}")
+        additional[name] = Path(raw_path)
     print(
         json.dumps(
             build(
@@ -140,6 +165,7 @@ def main() -> None:
                 args.bioemu_manifest,
                 args.output_root,
                 seed=args.seed,
+                additional_manifests=additional,
             ),
             indent=2,
             sort_keys=True,

@@ -1,0 +1,13 @@
+family,comparison,metric,raw_mean,residual_mean,mean_difference,paired_p,paired_method,n_splits,paired_fdr
+linear,residual_plddt_minus_raw_esm2_3b,accuracy,0.6153846153846154,0.6063627730294396,-0.009021842355175669,0.5,exact_paired_sign_flip,2,0.5
+linear,residual_plddt_minus_raw_esm2_3b,auroc,0.6714944083694083,0.6536201298701299,-0.017874278499278473,0.5,exact_paired_sign_flip,2,0.5
+linear,residual_plddt_minus_raw_esm2_3b,auprc,0.6682455434310297,0.6452606224490406,-0.022984920981989176,0.5,exact_paired_sign_flip,2,0.5
+linear,residual_full_covariates_minus_raw_esm2_3b,accuracy,0.6153846153846154,0.5660018993352327,-0.04938271604938271,0.5,exact_paired_sign_flip,2,0.5
+linear,residual_full_covariates_minus_raw_esm2_3b,auroc,0.6714944083694083,0.6005564574314575,-0.07093795093795091,0.5,exact_paired_sign_flip,2,0.5
+linear,residual_full_covariates_minus_raw_esm2_3b,auprc,0.6682455434310297,0.5848002126554837,-0.08344533077554606,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_plddt_minus_raw_esm2_3b,accuracy,0.5916429249762583,0.5788224121557455,-0.01282051282051283,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_plddt_minus_raw_esm2_3b,auroc,0.6293858225108225,0.6103102453102454,-0.01907557720057723,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_plddt_minus_raw_esm2_3b,auprc,0.6222985571276253,0.6000726780520126,-0.022225879075612687,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_full_covariates_minus_raw_esm2_3b,accuracy,0.5916429249762583,0.566951566951567,-0.024691358024691357,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_full_covariates_minus_raw_esm2_3b,auroc,0.6293858225108225,0.5861534992784992,-0.04323232323232329,0.5,exact_paired_sign_flip,2,0.5
+tree,residual_full_covariates_minus_raw_esm2_3b,auprc,0.6222985571276253,0.5785860251892545,-0.04371253193837071,0.5,exact_paired_sign_flip,2,0.5

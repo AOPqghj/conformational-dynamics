@@ -336,6 +336,14 @@ def _summary(values: pd.DataFrame, groups: list[str], metrics: tuple[str, ...]) 
     )
 
 
+def _paired_inference(differences: np.ndarray) -> tuple[float, str]:
+    """Return paired inference when repeated splits make it estimable."""
+    if np.count_nonzero(np.isfinite(differences)) < 2:
+        return np.nan, "not_estimable_single_split"
+    test = paired_sign_flip_test(differences)
+    return float(test["permutation_p_two_sided"]), str(test["permutation_method"])
+
+
 def residual_permutation_tests(records: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     for family in ("linear", "tree"):
@@ -348,7 +356,8 @@ def residual_permutation_tests(records: pd.DataFrame) -> pd.DataFrame:
             for metric in ("test_accuracy", "test_auroc", "test_auprc"):
                 raw = paired[(metric, f"raw_{REPRESENTATION_NAME}")]
                 residual = paired[(metric, residual_view)]
-                test = paired_sign_flip_test((residual - raw).to_numpy())
+                difference = (residual - raw).to_numpy()
+                paired_p, paired_method = _paired_inference(difference)
                 rows.append(
                     {
                         "family": family,
@@ -356,14 +365,19 @@ def residual_permutation_tests(records: pd.DataFrame) -> pd.DataFrame:
                         "metric": metric.removeprefix("test_"),
                         "raw_mean": raw.mean(),
                         "residual_mean": residual.mean(),
-                        "mean_difference": (residual - raw).mean(),
-                        "paired_p": test["permutation_p_two_sided"],
-                        "paired_method": test["permutation_method"],
+                        "mean_difference": difference.mean(),
+                        "paired_p": paired_p,
+                        "paired_method": paired_method,
                         "n_splits": len(raw),
                     }
                 )
     result = pd.DataFrame(rows)
-    result["paired_fdr"] = benjamini_hochberg(result.paired_p.to_numpy())
+    result["paired_fdr"] = np.nan
+    finite = result.paired_p.notna()
+    if finite.any():
+        result.loc[finite, "paired_fdr"] = benjamini_hochberg(
+            result.loc[finite, "paired_p"].to_numpy()
+        )
     return result
 
 
@@ -541,7 +555,7 @@ def run_stratified_benchmark(catalog: pd.DataFrame) -> None:
                 )
                 for metric in ("test_accuracy", "test_auroc", "test_auprc"):
                     difference = paired[(metric, view)] - paired[(metric, "metadata")]
-                    test = paired_sign_flip_test(difference.to_numpy())
+                    paired_p, paired_method = _paired_inference(difference.to_numpy())
                     comparisons.append(
                         {
                             "plddt_stratum": stratum,
@@ -551,8 +565,8 @@ def run_stratified_benchmark(catalog: pd.DataFrame) -> None:
                             "mean_difference": (
                                 paired[(metric, view)] - paired[(metric, "metadata")]
                             ).mean(),
-                            "paired_p": test["permutation_p_two_sided"],
-                            "paired_method": test["permutation_method"],
+                            "paired_p": paired_p,
+                            "paired_method": paired_method,
                             "n_splits": len(paired),
                         }
                     )
@@ -561,9 +575,12 @@ def run_stratified_benchmark(catalog: pd.DataFrame) -> None:
     # against.  Still emit the empty report rather than failing after all
     # requested models have completed.
     if not comparison_table.empty:
-        comparison_table["paired_fdr"] = benjamini_hochberg(
-            comparison_table.paired_p.to_numpy()
-        )
+        comparison_table["paired_fdr"] = np.nan
+        finite = comparison_table.paired_p.notna()
+        if finite.any():
+            comparison_table.loc[finite, "paired_fdr"] = benjamini_hochberg(
+                comparison_table.loc[finite, "paired_p"].to_numpy()
+            )
     comparison_table.to_csv(STRATIFIED_OUTPUT / "paired_permutation_tests.csv", index=False)
     _write_json(
         STRATIFIED_OUTPUT / "progress.json",

@@ -16,6 +16,7 @@ CPU model fitting is constrained with `OMP_NUM_THREADS=2`, `MKL_NUM_THREADS=2`, 
 - ESMFold: open `notebooks/09_esmfold_trunk_colab.ipynb` in a CUDA Colab runtime and point it to `data/dataset_manifest.csv.gz`.
 - BioEMU (MSA-aware): use `notebooks/28_bioemu_tpu_drive_pipeline.ipynb`; use notebook 29 to resume checkpointed runs.
 - BioEMU without MSA: use `notebooks/30_bioemu_no_msa_colab.ipynb`.
+- ESM2-3B: use `notebooks/31_esm2_3b_final_layer_colab.ipynb`.
 
 The notebooks write one residue matrix per protein. Embeddings and upstream model weights are not redistributed. After generation, build a local catalog with embedding paths using the included catalog utilities, then pass its path through the environment variables printed by `scripts/reproduce.py list`.
 
